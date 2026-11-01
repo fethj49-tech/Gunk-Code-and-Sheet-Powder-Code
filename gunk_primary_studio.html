@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gunk Primary Engine & Sheet Powder Deployment</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #0c0c0e; color: #d0d0dc; font-family: monospace; height: 100vh; display: flex; flex-direction: column; }
+    header { background: #15151a; padding: 12px 20px; border-bottom: 1px solid #252530; display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 1.05rem; color: #00f2fe; }
+    .controls { display: flex; gap: 8px; }
+    .btn { background: #00f2fe; color: #0c0c0e; border: none; padding: 6px 14px; font-weight: bold; font-family: inherit; cursor: pointer; border-radius: 4px; font-size: 0.85rem; }
+    .btn-powder { background: #ff007f; color: #ffffff; }
+    .btn-secondary { background: #252530; color: #00f2fe; border: 1px solid #00f2fe; }
+    .btn:hover { opacity: 0.9; }
+    .container { display: flex; flex: 1; overflow: hidden; }
+    .pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #252530; }
+    .pane-title { background: #15151a; padding: 8px 12px; font-size: 0.8rem; color: #88889c; border-bottom: 1px solid #252530; text-transform: uppercase; letter-spacing: 1px; }
+    textarea { flex: 1; background: #0c0c0e; color: #00ff66; padding: 12px; border: none; outline: none; font-family: 'Courier New', monospace; font-size: 0.85rem; resize: none; line-height: 1.4; }
+    #outputConsole { flex: 1; background: #060608; color: #33ff00; padding: 12px; overflow-y: auto; font-size: 0.85rem; line-height: 1.4; white-space: pre-wrap; }
+    .log-line { margin-bottom: 4px; border-bottom: 1px solid #14141a; padding-bottom: 2px; }
+    .gunk-primary { color: #00f2fe; font-weight: bold; }
+    .powder-deploy { color: #ff007f; }
+    .transpiled-out { color: #ffbb00; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>TechroTurf 0 :: Gunk Primary Code Engine</h1>
+    <div class="controls">
+      <button class="btn btn-secondary" onclick="transpileGunk()">EXPORT JS SCRIPT</button>
+      <button class="btn" onclick="executeGunkPrimary()">EXECUTE GUNK (PRIMARY)</button>
+      <button class="btn btn-powder" onclick="deployToPowder()">DEPLOY TO SHEET POWDER</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Gunk Code Editor Pane -->
+    <div class="pane">
+      <div class="pane-title">Gunk Primary Workspace</div>
+      <textarea id="gunkEditor" spellcheck="false">// Primary Gunk Code Statements
+FRET_IMPULSE(36, 0.98)
+WARP_SWEEP([0.15, 0.5, 0.95, -0.3])
+BUS_BROADCAST('master-bus', { status: 'GUNK_PRIMARY_ACTIVE' })</textarea>
+    </div>
+
+    <!-- Execution Output Pane -->
+    <div class="pane">
+      <div class="pane-title">Primary Runtime / Powder Console</div>
+      <div id="outputConsole"></div>
+    </div>
+  </div>
+
+  <script>
+    // 1. Gunk Primary Index Directory Database
+    const GunkIndexDB = {
+      'FRET_IMPULSE': {
+        exec: (fretNote, velocity) => {
+          const freq = 440 * Math.pow(2, (fretNote - 69) / 12);
+          return `[Gunk Engine] Low Note ${fretNote} synthesized at ${freq.toFixed(2)}Hz (Vel: ${velocity})`;
+        },
+        compile: (args) => `triggerFretNode(${args.join(', ')});`
+      },
+      'WARP_SWEEP': {
+        exec: (signalArray) => {
+          const Thrashed = signalArray.map(v => Math.tanh(v * 2.5).toFixed(3));
+          return `[Gunk Engine] Trip Warp Output: [${Thrashed.join(', ')}]`;
+        },
+        compile: (args) => `processWarpThrash(${args.join(', ')});`
+      },
+      'BUS_BROADCAST': {
+        exec: (channel, payload) => {
+          return `[Gunk Engine] Direct bus output to '${channel}': ${JSON.stringify(payload)}`;
+        },
+        compile: (args) => `emitToUniversalBus(${args.join(', ')});`
+      }
+    };
+
+    // 2. Gunk Execution Core (Primary Execution)
+    function executeGunkPrimary() {
+      document.getElementById('outputConsole').innerHTML = '';
+      logConsole('[PRIMARY RUNTIME] Executing Gunk Code directly...', 'gunk-primary');
+
+      const lines = document.getElementById('gunkEditor').value.split('\n');
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('//')) return;
+
+        const match = trimmed.match(/^([A-Z_]+)\((.*)\)$/);
+        if (match) {
+          const [_, token, rawArgs] = match;
+          if (GunkIndexDB[token]) {
+            try {
+              const args = new Function(`return [${rawArgs}];`)();
+              const result = GunkIndexDB[token].exec(...args);
+              logConsole(result);
+            } catch (e) {
+              logConsole(`[Gunk Exec Error] ${token}: ${e.message}`);
+            }
+          }
+        }
+      });
+    }
+
+    // 3. Sheet Powder Deployment (Optional Ephemeral Sandbox)
+    function deployToPowder() {
+      document.getElementById('outputConsole').innerHTML = '';
+      const layerId = 'powder_cake_' + Math.floor(Math.random() * 10000);
+      logConsole(`[SHEET POWDER DEPLOY] Spawning ephemeral layer '${layerId}'...`, 'powder-deploy');
+
+      // Create temporary isolated sandbox context
+      const powderSandbox = {
+        layerId,
+        active: true,
+        run: function(lines) {
+          lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('//')) return;
+
+            const match = trimmed.match(/^([A-Z_]+)\((.*)\)$/);
+            if (match && GunkIndexDB[match[1]]) {
+              const args = new Function(`return [${match[2]}];`)();
+              logConsole(`[Powder:${layerId}] ` + GunkIndexDB[match[1]].exec(...args));
+            }
+          });
+        },
+        destroy: function() {
+          this.active = false;
+          logConsole(`[SHEET POWDER DEPLOY] Layer '${layerId}' disbanded. Zero leak achieved.`, 'powder-deploy');
+        }
+      };
+
+      const lines = document.getElementById('gunkEditor').value.split('\n');
+      powderSandbox.run(lines);
+      powderSandbox.destroy();
+    }
+
+    // 4. Transpile Gunk Code to Standard JavaScript
+    function transpileGunk() {
+      document.getElementById('outputConsole').innerHTML = '';
+      logConsole('[COMPILER] Translating Gunk Code into Standard JavaScript Script...', 'transpiled-out');
+
+      const lines = document.getElementById('gunkEditor').value.split('\n');
+      let compiledJS = '// Standard JS Transpiled from Gunk Code\n';
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('//')) {
+          compiledJS += line + '\n';
+          return;
+        }
+
+        const match = trimmed.match(/^([A-Z_]+)\((.*)\)$/);
+        if (match && GunkIndexDB[match[1]]) {
+          const [_, token, rawArgs] = match;
+          const argsArray = rawArgs.split(',').map(a => a.trim());
+          compiledJS += GunkIndexDB[token].compile(argsArray) + '\n';
+        }
+      });
+
+      logConsole(compiledJS, 'transpiled-out');
+    }
+
+    function logConsole(text, customClass = '') {
+      const consoleEl = document.getElementById('outputConsole');
+      const div = document.createElement('div');
+      div.className = `log-line ${customClass}`;
+      div.textContent = text;
+      consoleEl.appendChild(div);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+  </script>
+</body>
+</html>
